@@ -1,0 +1,11 @@
+.side-components-parent{
+    width: 32%;
+    box-shadow: 10px 10px 10px rgba(0, 0, 0, 0.196);
+    border-radius: 20px;
+    display: flex;
+    margin-top: 0;
+    height: 100vh;
+    /* border: 2px solid red; */
+}
+.side-components-parent{
+}

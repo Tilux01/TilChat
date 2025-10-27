@@ -1,0 +1,30 @@
+.sider-parent{
+    width: 70px;
+    background: #111213;
+    box-shadow: 0px 0px 20px rgba(255, 255, 255, 0.041);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding-left: 2px;
+    padding-top: 1.5rem;
+}
+.sider-parent div{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    border-radius: 50% 50%;
+    padding: 10px 2px;
+}
+.sider-parent div:hover{
+    background-color: rgba(128, 128, 128, 0.106);
+}
+.sider-parent div img{
+    width: 25px;
+    filter: invert(1);
+}
+.sider-parent div p{
+    color: white;
+    font-size: 15px;
+}
