@@ -1,18 +1,28 @@
-// vite.config.js - Nuclear option
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
 
+// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
   define: {
+    'process.env': {},
     global: 'globalThis',
-    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
-    'process.env': '{}',
-    'process.platform': '"browser"'
   },
-  ssr: {
-    // Also fix SSR issues if any
-    noExternal: true,
-    target: 'webworker'
-  }
-});
+  resolve: {
+    alias: {
+      buffer: 'buffer',
+      stream: 'stream-browserify',
+      util: 'util',
+      path: 'path-browserify',
+      crypto: 'crypto-browserify',
+    },
+  },
+  build: {
+    outDir: 'dist',
+    sourcemap: true,
+  },
+  server: {
+    host: true,
+    port: 3000,
+  },
+})

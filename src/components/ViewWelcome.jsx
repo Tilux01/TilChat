@@ -6,10 +6,15 @@ import deleteImg from "../images/delete.png"
 import welcome from "../images/motion-sensor.png"
 import send from "../images/paper-plane.png"
 import "../Styles/viewWelcome.css"
+import { useNavigate } from 'react-router-dom'
 
 const ViewWelcome = (props) => {
     const [userCredentials, setUserCredentials] = useState([])
     const userNameLoc = JSON.parse(localStorage.getItem("TilChat"))
+    const navigate = useNavigate()
+    if (!userNameLoc) {
+        navigate("/signup")
+    }
     const changePage = () => {
         props.setViewState("ChatBot")
     }
@@ -20,7 +25,6 @@ const ViewWelcome = (props) => {
                 <div className="profile">
                     <img src={profileArrow} alt="" className='navigateArrow'/>
                     <img src={profileImg} alt="" />
-                    <p>{userNameLoc.UserName}</p>
                 </div>
             </header>
             <div className="welcome-view">
