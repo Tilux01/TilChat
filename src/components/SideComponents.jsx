@@ -14,6 +14,7 @@ import { initializeApp } from 'firebase/app'
 import { getAnalytics } from "firebase/analytics";
 import {getDatabase,onChildAdded,ref, query, orderByChild, limitToLast, onValue,get, onChildChanged,set} from "firebase/database"
 import axios from 'axios'
+import { useNavigate } from 'react-router-dom'
 
 const firebaseConfig = {
   apiKey: "AIzaSyCoDIlOAkemogzj-Gw2G_lVO7VI7uEeIG8",
@@ -36,10 +37,16 @@ const analytics = getAnalytics(app);
 
 const SideComponents = (props) => {
     // This is the user status Array list, distributed to friends and userStatus component using props
+    const navigate = useNavigate()
+    let userName 
+    const localData = JSON.parse(localStorage.getItem("TilChat"))
+    if (!localData) {
+        navigate("/signup")
+    }
+    else{
+        userName = localData.UserName
+    }
     useEffect(() => {
-      let userName 
-      const localData = JSON.parse(localStorage.getItem("TilChat"))
-      userName = localData.UserName
       // onChildAdded(ref(db, `Statuses`), (snapshot) => {
       //     const lastMessage = snapshot.val();
       //     console.log(lastMessage);
@@ -93,7 +100,7 @@ const SideComponents = (props) => {
     
     useEffect(() => {
         const userNameLoc = JSON.parse(localStorage.getItem("TilChat"))
-        get(ref(db,`Users/${userNameLoc.UserName}`))
+        get(ref(db,`Users/${userNameLoc? userNameLoc.UserName : null}`))
         .then((output)=>{
             if(output.exists()){
                 setUserCredentials(output.val())
@@ -104,7 +111,7 @@ const SideComponents = (props) => {
     
     useEffect(() => {
         const userNameLoc = JSON.parse(localStorage.getItem("TilChat"))
-        onValue(ref(db, `Users/${userNameLoc.UserName}/mutualFriends`),(output)=>{
+        onValue(ref(db, `Users/${userNameLoc? userNameLoc.UserName : null}/mutualFriends`),(output)=>{
             if (output.exists()) {
                 setMutualFriendsArray(output.val())
                 console.log(mutualFriendsArray);
@@ -162,7 +169,7 @@ const SideComponents = (props) => {
 
         useEffect(() => {
             const localData = JSON.parse(localStorage.getItem("TilChat"))
-            const userName = localData.UserName
+            const userName = localData? localData.UserName : null
             onValue(ref(db, `Users/${userName}/StatusPending/list`),(output)=>{
                 if (output.exists()) {
                     if (statusCollection.length == 0) {
@@ -218,7 +225,7 @@ const SideComponents = (props) => {
             let tempHold
             tempHold = allStatusUser
             const localData = JSON.parse(localStorage.getItem("TilChat"))
-            const userName = localData.UserName
+            const userName = localData? localData.UserName : null
             setAllStatusUser(()=>[])
             filterStatus.map((output)=>{
                 if (!tempHold.includes(output.userName)) {
