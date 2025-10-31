@@ -9,6 +9,7 @@ import imagePreview from "../images/photo (1).png"
 import { getAnalytics } from "firebase/analytics";
 import {getDatabase,ref,push,set,get, query, onValue, orderByChild, equalTo, orderByKey,update,startAt,endAt} from "firebase/database"
 import MediaTypesSelect from './MediaTypesSelect'
+import loader from "../images/loading.png"
 
 const ChatMediaSend = (props) => {
     console.log(props);
@@ -18,6 +19,7 @@ const ChatMediaSend = (props) => {
     const [userPrompt, setUserPrompt] = useState("")
     const [mediaType, setMediaType] = useState("")
     const [mediaData, setMediaData] = useState("")
+    const [statusPreview, setStatusPreview] = useState(true)
     const closeSend = () =>{
         props.setDisplayMedia(()=>false)
     }
@@ -31,16 +33,17 @@ const ChatMediaSend = (props) => {
         userName = localData.UserName
     }, [])
     const MediaSelect = useMemo(() => {
-        return <MediaTypesSelect type={props.mediaType} data={props.displayUrl}/>
+        return <MediaTypesSelect type={props.mediaType} data={props.displayUrl} statusPreview={statusPreview} />
     }, [props.mediaType, props.displayUrl])
     return (
         <div className='sendOverall'>
+            {props.loading? <img src={loader} alt=""  className='loaderImg'/> : null}
             <div className="previewBox">
                 {MediaSelect}
-            </div>
+            </div>  
             <div className="caption">
                 <div className="shrink">
-                    <input type="text"  placeholder='write a caption' value={userPrompt} onChange={(e)=>{props.setUserPrompt(e.target.value)}}/>
+                    <input type="text"  placeholder='write a caption' value={props.collectInputTemp} onChange={(e)=>{props.setCollectInputTemp(e.target.value)}}/>
                     <img src={send} onClick={props.sendMediaChat}/>   
                 </div>
             </div>

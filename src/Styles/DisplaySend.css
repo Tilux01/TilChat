@@ -9,6 +9,23 @@
     z-index: 40000;
     padding-top: 5vh;
 }
+.loaderImg{
+    position: absolute;
+    z-index: 100;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 70px;
+    animation: rotateLoader 1s linear infinite;
+}
+@keyframes rotateLoader {
+    0%{
+        transform: translate(-50%, -50%) rotate(0deg) ;
+    }
+    100%{
+        transform: translate(-50%, -50%) rotate(-360deg);
+    }
+}
 .sendOverall .previewBox{
     width: 100vw;
     height: 80vh;

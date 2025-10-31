@@ -24,6 +24,8 @@ import ChatMediaSend from './ChatMediaSend'
 import VideoPlayer from './VideoPlayer'
 import PreviewMedia from './PreviewMedia'
 import MediaTypesSelect from './MediaTypesSelect'
+import sent from "../images/doneThick.png"
+import sending from "../images/rotate.png"
 
 
 
@@ -60,6 +62,9 @@ const ChatDisplay = (props) => {
     const [displayMedia, setDisplayMedia] = useState(false)
     const [mediaType, setMediaType] = useState()
     const [previewMedia, setPreviewMedia] = useState(false)
+    const [collectInputTemp, setCollectInputTemp] = useState(null)
+    const [loading, setLoading] = useState(false)
+    const [statusPreview, setStatusPreview] = useState(false)
     const previewSrc = useRef(null)
     const previewType = useRef(null)
     const userPrompt = useRef("")
@@ -75,6 +80,7 @@ const ChatDisplay = (props) => {
         }
         else{
             setUserName(JSON.parse(userNameGet).UserName)
+            
         }
     }, [navigate])
     const [chatArray, setChatArray] = useState([])
@@ -136,138 +142,146 @@ const ChatDisplay = (props) => {
         return requestValue
     }, [props.chatInfo])
     const sendChat = () =>{
-        const message = userPrompt.current.value
-        if(message){
-            get(ref(db, "Messages/"+props.chatInfo))
-            .then((output)=>{
-                console.log("Username",userName);
-                if(!output.val().chatArray || output.val().chatArray == "No message" || typeof(output.val().message) == "string"){
-                    setChatArray(prev=>[...prev, {[userName]:{
-                            prompt:message,
-                            media: null,
-                            mediaType: null,
-                            mediaLink: null
-                        }}])
-                    set(ref(db,"Messages/"+props.chatInfo),{
-                        chatArray: [{[userName]:{
-                            prompt:message,
-                            media: null,
-                            mediaType: null,
-                            mediaLink: null
-                        }}]
-                    })
-                    .then(()=>{
-                        userPrompt.current.value = ""
-                        setMediaOption(()=>true)
-                        setMediaOption(()=>false)
-                    })
-                }
-                else{
-                        let tempData = output.val().chatArray
-                        console.log(tempData);
+        if (!loading) {
+            setLoading(()=>true)
+            const message = userPrompt.current.value
+            if(message){
+                get(ref(db, "Messages/"+props.chatInfo))
+                .then((output)=>{
+                    console.log("Username",userName);
+                    if(!output.val().chatArray || output.val().chatArray == "No message" || typeof(output.val().message) == "string"){
                         setChatArray(prev=>[...prev, {[userName]:{
-                            prompt:userPrompt.current.value
-                        }}])
+                                prompt:message,
+                                progress: sending,
+                                media: null,
+                                mediaType: null,
+                                mediaLink: null
+                            }}])
                         set(ref(db,"Messages/"+props.chatInfo),{
-                            chatArray: tempData
+                            chatArray: [{[userName]:{
+                                prompt:message,
+                                media: null,
+                                mediaType: null,
+                                mediaLink: null
+                            }}]
                         })
                         .then(()=>{
                             userPrompt.current.value = ""
                             setMediaOption(()=>true)
                             setMediaOption(()=>false)
+                            setLoading(()=>false)
                         })
                     }
-                saveChat(props.chatInfo, chatArray)
-                getChat(props.chatInfo)
-            })
+                    else{
+                            let tempData = output.val().chatArray
+                            console.log(tempData);
+                            setChatArray(prev=>[...prev, {[userName]:{
+                                prompt:userPrompt.current.value,
+                                progress: sending
+                            }}])
+                            set(ref(db,"Messages/"+props.chatInfo),{
+                                chatArray: tempData
+                            })
+                            .then(()=>{
+                                userPrompt.current.value = ""
+                                setMediaOption(()=>true)
+                                setMediaOption(()=>false)
+                                setLoading(()=>false)
+                            })
+                        }
+                    saveChat(props.chatInfo, chatArray)
+                    getChat(props.chatInfo)
+                })
+            }
         }
     }
-    const sendMediaChat = useCallback(() =>{
-        const message = userPrompt.current.value
-        console.log();
-        
-        get(ref(db, "Messages/"+props.chatInfo))
-        .then((output)=>{
-            console.log("Username",userName);
-            const randoms = "-_--_abcdefghijklmnA1234567890ABCDEFGHIJKLMNO-__-"
-            let randomValue = ""
-            for (let index = 0; index < 12; index++) {
-                const generateRandom = randoms[Math.floor(Math.random()*randoms.length)]
-                randomValue = randomValue + generateRandom
-            }
-            let dataParticlesCollection = []
-            let dataParticleSize = 15000
-            console.log(displayUrl);
-            for (let index = 0; index < displayUrl.length; index += dataParticleSize) {
-                const particles  = displayUrl.slice(index, index + dataParticleSize)
-                dataParticlesCollection.push(particles)
-            }
-            if(!output.val().chatArray || output.val().chatArray == "No message" || typeof(output.val().message) == "string"){
-                // const blob = new Blob([displayUrl], { type: mediaType });
-                // const url = URL.createObjectURL(blob);
-                console.log(message);
-                
-                setChatArray(prev=>[...prev, {[userName]:{
-                        prompt: message,
-                        media: displayUrl,
-                        mediaType: mediaType
-                }}])
-                const randoms = "abcdefghijklmnA1234567890BCDOELQPMLS"
-                const generateRandom = randoms[Math.floor(Math.random()*randoms.length)]
-                console.log(generateRandom);
-                
-                for (let index = 0; index < dataParticlesCollection.length; index++) {
-                    set(ref(db, `Media/${randomValue}/${[index]}`),{
-                        data : dataParticlesCollection[index]
+    const sendMediaChat = () =>{
+        if (!loading) {
+            setLoading(()=>true)
+            const message = collectInputTemp
+            get(ref(db, "Messages/"+props.chatInfo))
+            .then((output)=>{
+                console.log("Username",userName);
+                const randoms = "-_--_abcdefghijklmnA1234567890ABCDEFGHIJKLMNO-__-"
+                let randomValue = ""
+                for (let index = 0; index < 12; index++) {
+                    const generateRandom = randoms[Math.floor(Math.random()*randoms.length)]
+                    randomValue = randomValue + generateRandom
+                }
+                let dataParticlesCollection = []
+                let dataParticleSize = 15000
+                console.log(displayUrl);
+                for (let index = 0; index < displayUrl.length; index += dataParticleSize) {
+                    const particles  = displayUrl.slice(index, index + dataParticleSize)
+                    dataParticlesCollection.push(particles)
+                }
+                if(!output.val().chatArray || output.val().chatArray == "No message" || typeof(output.val().message) == "string"){
+                    console.log(message);
+                    
+                    setChatArray(prev=>[...prev, {[userName]:{
+                            prompt: message,
+                            media: displayUrl,
+                            mediaType: mediaType
+                    }}])
+                    const randoms = "abcdefghijklmnA1234567890BCDOELQPMLS"
+                    const generateRandom = randoms[Math.floor(Math.random()*randoms.length)]
+                    console.log(generateRandom);
+                    
+                    for (let index = 0; index < dataParticlesCollection.length; index++) {
+                        set(ref(db, `Media/${randomValue}/${[index]}`),{
+                            data : dataParticlesCollection[index]
+                        })
+                    }
+                    set(ref(db,"Messages/"+props.chatInfo),{
+                        chatArray: [{[userName]:{
+                            prompt:message,
+                            mediaLink: randomValue,
+                            mediaType: mediaType
+                        }}]
+                    })
+                    .then(()=>{
+                        setCollectInputTemp(()=>null)
+                        setMediaOption(()=>false)
+                        setDisplayMedia(()=>false)
+                        setLoading(()=>false)   
                     })
                 }
-                set(ref(db,"Messages/"+props.chatInfo),{
-                    chatArray: [{[userName]:{
+                else{
+                    console.log(message);
+                    
+                    let tempData = output.val().chatArray
+                    const blob = new Blob([displayUrl], { type: mediaType });
+                    const url = URL.createObjectURL(blob);
+                    setChatArray(prev=> [...prev, {[userName]:{
+                        prompt:message,
+                        media: displayUrl,
+                        mediaType: mediaType
+                    }}])
+                    for (let index = 0; index < dataParticlesCollection.length; index++) {
+                        set(ref(db, `Media/${randomValue}/${[index]}`),{
+                            data : dataParticlesCollection[index]
+                        })
+                    }
+                    // alert("start")
+                    tempData.push({[userName]:{
                         prompt:message,
                         mediaLink: randomValue,
                         mediaType: mediaType
-                    }}]
-                })
-                .then(()=>{
-                    userPrompt.current.value = ""
-                    setMediaOption(()=>false)
-                    setDisplayMedia(()=>false)
-                })
-            }
-            else{
-                console.log(message);
-                
-                let tempData = output.val().chatArray
-                const blob = new Blob([displayUrl], { type: mediaType });
-                const url = URL.createObjectURL(blob);
-                setChatArray(prev=> [...prev, {[userName]:{
-                    prompt:message,
-                    media: displayUrl,
-                    mediaType: mediaType
-                }}])
-                for (let index = 0; index < dataParticlesCollection.length; index++) {
-                    set(ref(db, `Media/${randomValue}/${[index]}`),{
-                        data : dataParticlesCollection[index]
+                    }})
+                    console.log(tempData);
+                    set(ref(db,"Messages/"+props.chatInfo),{
+                        chatArray: tempData
+                    })
+                    .then(()=>{
+                        setCollectInputTemp(()=>null)
+                        setMediaOption(()=>false)
+                        setDisplayMedia(()=>false)
+                        setLoading(()=>false)
                     })
                 }
-                // alert("start")
-                tempData.push({[userName]:{
-                    prompt:message,
-                    mediaLink: randomValue,
-                    mediaType: mediaType
-                }})
-                console.log(tempData);
-                set(ref(db,"Messages/"+props.chatInfo),{
-                    chatArray: tempData
-                })
-                .then(()=>{
-                    userPrompt.current.value = ""
-                    setMediaOption(()=>false)
-                    setDisplayMedia(()=>false)
-                })
-            }
-        })
-    }, [userPrompt])
+            })
+        }
+    }
     const changeMediaOption = () =>{
         if (mediaOption) {
             setMediaOption(()=>false)
@@ -324,8 +338,8 @@ const ChatDisplay = (props) => {
                         const uint8Chunks = collectData.map(chunk => new Uint8Array(chunk));
                         const blob = new Blob(uint8Chunks, { type: arrayToAdjust[index][user].mediaType });
                         const url = URL.createObjectURL(blob);
-                        arrayToAdjust[index][user].media = url
-                        setChatArray(()=>arrayToAdjust)
+                        arrayToAdjust[index][user].media = blob
+                        setChatArray(arrayToAdjust)
                         allChunks.map((output, index)=>{
                             set(ref(db, `Media/${userData.mediaLink}/${index}`), null)
                             .then(()=>{
@@ -345,7 +359,7 @@ const ChatDisplay = (props) => {
     return (
         <>
             {displayMedia?
-                <ChatMediaSend displayUrl={displayUrl} setDisplayMedia={setDisplayMedia} mediaType={mediaType} sendMediaChat={sendMediaChat}/>:
+                <ChatMediaSend displayUrl={displayUrl} setDisplayMedia={setDisplayMedia} mediaType={mediaType} sendMediaChat={sendMediaChat} setCollectInputTemp={setCollectInputTemp} collectInputTemp={collectInputTemp} loading={loading}/>:
                 <div className='view-overall'>
                 {previewMedia? <PreviewMedia previewSrc = {previewSrc.current} previewType = {previewType.current} setPreviewMedia={setPreviewMedia}/> : null}
                 <header>    
@@ -366,13 +380,16 @@ const ChatDisplay = (props) => {
                         <div className="chat-log">
                             {
                                 chatArray.map((output,index)=>{
+                                    console.log("outputMap:", output);
+                                    
                                     if(output){
                                         if (Object.keys(output)[0] == userName) {
                                             return(
                                                 <div className='request chat-request' key={index}>
                                                     <main>
-                                                    <MediaTypesSelect type={output[`${userName}`].mediaType} data={output[`${userName}`].media}/>
+                                                        <MediaTypesSelect type={output[`${userName}`].mediaType} data={output[`${userName}`].media} setPreviewMedia={setPreviewMedia} previewSrc={previewSrc} previewType = {previewType} statusPreview={statusPreview}/>
                                                         <p>{output[`${userName}`].prompt}</p>
+                                                        <img src={output[`${userName}`].progress} alt="" />
                                                     </main>
                                                 </div>
                                             )
@@ -381,8 +398,9 @@ const ChatDisplay = (props) => {
                                             return(
                                                 <div className='response chat-response' key={index}>
                                                     <main>
-                                                    <MediaTypesSelect type={output[`${Object.keys(output)[0]}`].mediaType} data={output[`${Object.keys(output)[0]}`].media}/>
+                                                    <MediaTypesSelect type={output[`${Object.keys(output)[0]}`].mediaType} data={output[`${Object.keys(output)[0]}`].media} setPreviewMedia={setPreviewMedia} previewSrc={previewSrc} previewType = {previewType} statusPreview={statusPreview}/>
                                                     <p>{output[`${Object.keys(output)[0]}`].prompt}</p>
+                                                    <img src={output[`${Object.keys(output)[0]}`].progress} alt="" />
                                                     </main>
                                                 </div>
                                             )
