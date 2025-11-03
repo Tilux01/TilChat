@@ -19,7 +19,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyCoDIlOAkemogzj-Gw2G_lVO7VI7uEeIG8",
   authDomain: "tilchat-91043.firebaseapp.com",
   databaseURL: "https://tilchat-91043-default-rtdb.firebaseio.com",
-  projectId: "tilchat-91043",
+  projectId: "tilchat-91043",   
   storageBucket: "tilchat-91043.firebasestorage.app",
   messagingSenderId: "293755713788",
   appId: "1:293755713788:web:a28845400f6f8992a87f79",
@@ -27,7 +27,7 @@ const firebaseConfig = {
 };
 
 const appSettings = {
-    databaseURL: "https://tilchat-91043-default-rtdb.firebaseio.com/"
+  databaseURL: "https://tilchat-91043-default-rtdb.firebaseio.com/"
 }
 
 const app = initializeApp(firebaseConfig);
@@ -125,6 +125,10 @@ const SignUp = () => {
             setFullInfo(true)
           }
           e.target.innerHTML = `proceed`
+        })
+        .catch((err)=>{
+          console.log(err);
+          
         })
       }
     }

@@ -4,8 +4,7 @@ import videoPreview from "../images/video.png"
 import imagePreview from "../images/photo (1).png"
 
 
-const MediaTypesSelect = ({type, data, setPreviewMedia, previewSrc, previewType, statusPreview}) =>{
-    console.log(data);
+const MediaTypesSelect = ({type, data, setPreviewMedia, previewSrc, previewType, statusPreview}) =>{ 
         const preview = (data, type) =>{
             previewSrc.current = data
             previewType.current = type
@@ -25,8 +24,6 @@ const MediaTypesSelect = ({type, data, setPreviewMedia, previewSrc, previewType,
         }
         else if(type == "video"){
             if(data){
-                console.log("Data", data);
-                
                 const blob = new Blob([data], { type: type });
                 const url = URL.createObjectURL(blob);
                 return (

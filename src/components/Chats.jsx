@@ -36,6 +36,7 @@ const Chats = (props) => {
 // for (let index = 0; index < 4; index++) {
 // }
 const message = (output) =>{
+    console.log(output);
     props.setChatFriendDetail(C=>output)
     props.setChatView(true)
     const Msg1 = output.UserName + props.userCredentials.UserName
@@ -44,7 +45,7 @@ const message = (output) =>{
     let message1;
     let message2;
     get(ref(db,`Messages/${Msg1}`))
-    .then((output1)=>{
+    .then((output1)=>{``````
         if(output1.exists()){
             message1 = Msg1
             console.log(Msg2)

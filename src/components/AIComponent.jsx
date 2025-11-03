@@ -27,7 +27,9 @@ const ChatComponent = (props) =>{
                     {
                         props.chatArray.map((output,index)=>(
                             <div className={output.className} key={index}>
+                                <main>
                                 <p>{output.Text}</p>
+                                </main>
                             </div>
                         ))
                     }

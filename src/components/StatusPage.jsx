@@ -198,6 +198,14 @@ const Status = (props) => {
         props.setFeedObject(F=>feedObj)
     }
 
+    useEffect(() => {
+        axios.get(`https://newsapi.org/v2/everything?q=sport&sortBy=popularity&apiKey=41181213ecd644ae9230d93ad0b40544`)
+            .then((output)=>{
+                console.log(output);
+                
+                props.setFeed(output.data.articles)
+            })
+    }, [])
     const [feedSearchInput, setFeedSearchInput] = useState("")
     const feedSearch = () =>{
         if (feedSearchInput.length > 1) {

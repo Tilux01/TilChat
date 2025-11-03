@@ -101,6 +101,7 @@
     padding: 10px;
     background: rgba(128, 128, 128, 0.342);
     border-radius: 10px;
+    position: relative;
 }
 .view-overall .welcome-view-ai .chat-log main img,
 .view-overall .welcome-view-ai .chat-log main .videoPreviewer{
@@ -140,10 +141,24 @@
     box-shadow: 0px 0px 10px rgba(128, 128, 128, 0.151);
     color: whitesmoke;
     animation: show 0.5s 1;
+    display: flex;
+    margin-right: 15px;
+}
+.view-overall .welcome-view-ai .chat-log .request .progress{
+    width: 13px;
+    object-fit: contain;
+    background: transparent;
+    position: absolute;
+    bottom: 0;
+    right: 5px;
+    /* border: 2px solid red; */
+    height: 13px;
+
 }
 .view-overall .welcome-view-ai .chat-log .chat-request main{
     /* background: #2176ff; */
     background: #2176ff;
+    padding-bottom: 4px;
     /* box-shadow: 0px 0px 10px #2176ff5e; */
 }
 .view-overall .welcome-view-ai .chat-log .chat-request main img{

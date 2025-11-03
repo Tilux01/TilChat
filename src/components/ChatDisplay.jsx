@@ -26,7 +26,9 @@ import PreviewMedia from './PreviewMedia'
 import MediaTypesSelect from './MediaTypesSelect'
 import sent from "../images/doneThick.png"
 import sending from "../images/rotate.png"
-
+import errorSend from "../images/mark (1).png"
+import online from "../images/double-tick (2).png"
+import seen from "../images/double-tick (1).png"
 
 
 const firebaseConfig = {
@@ -44,18 +46,14 @@ const appSettings = {
     databaseURL: "https://tilchat-91043-default-rtdb.firebaseio.com/"
 }
 
-
-
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app)
 const analytics = getAnalytics(app);
 
 
-
 const ChatDisplay = (props) => {
     const navigate = () =>{useNavigate()}
     const useVal = ()=>{val()}
-    const userNameGet = localStorage.getItem("TilChat")
     const [userName, setUserName] = useState()
     const [mediaOption, setMediaOption] = useState(false)
     const [displayUrl, setDisplayUrl] = useState()
@@ -68,12 +66,13 @@ const ChatDisplay = (props) => {
     const previewSrc = useRef(null)
     const previewType = useRef(null)
     const userPrompt = useRef("")
-
+    
     const preview = (data, type) =>{
         previewSrc.current = data
         previewType.current = type
         setPreviewMedia(()=>true)
     }
+    const userNameGet = localStorage.getItem("TilChat")
     useEffect(() => {
         if(!userNameGet){
             navigate("/signup")
@@ -85,7 +84,6 @@ const ChatDisplay = (props) => {
     }, [navigate])
     const [chatArray, setChatArray] = useState([])
     const propsValue = useRef()
-
     const saveChat = async(directory, data) =>{
         const cache = await caches.open('TilCache')
         const response = new Response(JSON.stringify(data))
@@ -99,22 +97,20 @@ const ChatDisplay = (props) => {
     }
     const previousChat = useRef()
 
+   useEffect(() => {
+    getChat(props.chatInfo)
+    .then((output)=>{
+        if (output) {
+            setChatArray(output) 
+        }
+        else{
+            setChatArray([])
+        }
+    })
+}, [props.chatInfo])
     useEffect(() => {
-        console.log("chat Info", props.chatInfo)
-        getChat(props.chatInfo)
-        .then((output)=>{
-            console.log(output)
-            if (output) {
-                setChatArray(()=>output)
-            }
-            else{
-                setChatArray(()=>[])
-            }
-        })
-        .catch((error)=>{
-            console.log(error);
-        })
-    }, [props.chatInfo])
+        saveChat(props.chatInfo, chatArray)
+    }, [chatArray])
     const checkUser = useRef()
     useEffect(() => {
         propsValue.current = props.chatInfo
@@ -125,8 +121,6 @@ const ChatDisplay = (props) => {
                         if (output.val()?.message != "hello") {
                             const userName = JSON.parse(localStorage.getItem("TilChat")).UserName
                             if(Object.keys(output.val().chatArray[0])[0] != userName){
-                                console.log(output.val().chatArray);
-                                
                                 set(ref(db,"Messages/"+props.chatInfo),{
                                     chatArray: "No message"
                                 })
@@ -135,12 +129,49 @@ const ChatDisplay = (props) => {
                             
                         }
                     }
+                    else{
+                        const userName = JSON.parse(localStorage.getItem("TilChat")).UserName
+                        setChatArray(prev => prev.map(item => {
+                            if (item[userName]) {
+                                return {
+                                    ...item,
+                                        [userName]: {
+                                        ...item[userName],
+                                        progress: item[userName].progress === sent || item[userName].progress === online ? seen : item[userName].progress
+                                    }
+                                };
+                            }
+                            return item;
+                        }));
+                    }
                 }
             }
-            // saveChat(props.chatInfo, chatArray)
         })
         return requestValue
     }, [props.chatInfo])
+
+    const sentImage = sent
+    const onlineImage = online
+    useEffect(() => {
+        const checkOnline = onValue(ref(db,`Users/${props.chatFriendDetail.UserName}/onlineCheck`),(result)=>{
+            if (!result.val()) {
+                setChatArray(prev => prev.map(item => {
+                    if (item[userName]) {
+                        return {
+                            ...item,
+                            [userName]: {
+                                ...item[userName],
+                                progress: item[userName].progress === sentImage ? onlineImage : item[userName].progress
+                            }
+                        };
+                    }
+                    return item;
+                }));
+            }
+        })
+        return checkOnline
+    }, [props.chatFriendDetail.UserName, userName])
+
     const sendChat = () =>{
         if (!loading) {
             setLoading(()=>true)
@@ -148,15 +179,14 @@ const ChatDisplay = (props) => {
             if(message){
                 get(ref(db, "Messages/"+props.chatInfo))
                 .then((output)=>{
-                    console.log("Username",userName);
                     if(!output.val().chatArray || output.val().chatArray == "No message" || typeof(output.val().message) == "string"){
                         setChatArray(prev=>[...prev, {[userName]:{
-                                prompt:message,
-                                progress: sending,
-                                media: null,
-                                mediaType: null,
-                                mediaLink: null
-                            }}])
+                            prompt:message,
+                            progress: sending,
+                            media: null,
+                            mediaType: null,
+                            mediaLink: null
+                        }}])
                         set(ref(db,"Messages/"+props.chatInfo),{
                             chatArray: [{[userName]:{
                                 prompt:message,
@@ -170,11 +200,22 @@ const ChatDisplay = (props) => {
                             setMediaOption(()=>true)
                             setMediaOption(()=>false)
                             setLoading(()=>false)
+                            set(ref(db,`Users/${props.chatFriendDetail.UserName}/onlineCheck`),{
+                                user: userName
+                            })
+                            setChatArray((prev)=>prev.slice(0, -1))
+                            setChatArray(prev=>[...prev, {[userName]:{
+                                prompt:message,
+                                progress: sent,
+                                media: null,
+                                mediaType: null,
+                                mediaLink: null
+                            }}])
                         })
                     }
                     else{
                             let tempData = output.val().chatArray
-                            console.log(tempData);
+                            tempData.push({[userName]:{prompt:userPrompt.current.value}})
                             setChatArray(prev=>[...prev, {[userName]:{
                                 prompt:userPrompt.current.value,
                                 progress: sending
@@ -187,10 +228,25 @@ const ChatDisplay = (props) => {
                                 setMediaOption(()=>true)
                                 setMediaOption(()=>false)
                                 setLoading(()=>false)
+                                const randoms = "-_--_abcdefghijklmnA1234567890ABCDEFGHIJKLMNO-__-"
+                                let randomValue = ""
+                                for (let index = 0; index < 12; index++) {
+                                    const generateRandom = randoms[Math.floor(Math.random()*randoms.length)]
+                                    randomValue = randomValue + generateRandom
+                                }
+                                set(ref(db,`Users/${props.chatFriendDetail.UserName}/onlineCheck`),{
+                                    user: randomValue
+                                })
+                                setChatArray((prev)=>prev.slice(0, -1))
+                                setChatArray(prev=>[...prev, {[userName]:{
+                                    prompt:message,
+                                    progress: sent,
+                                    media: null,
+                                    mediaType: null,
+                                    mediaLink: null
+                                }}])
                             })
                         }
-                    saveChat(props.chatInfo, chatArray)
-                    getChat(props.chatInfo)
                 })
             }
         }
@@ -201,7 +257,6 @@ const ChatDisplay = (props) => {
             const message = collectInputTemp
             get(ref(db, "Messages/"+props.chatInfo))
             .then((output)=>{
-                console.log("Username",userName);
                 const randoms = "-_--_abcdefghijklmnA1234567890ABCDEFGHIJKLMNO-__-"
                 let randomValue = ""
                 for (let index = 0; index < 12; index++) {
@@ -210,23 +265,19 @@ const ChatDisplay = (props) => {
                 }
                 let dataParticlesCollection = []
                 let dataParticleSize = 15000
-                console.log(displayUrl);
                 for (let index = 0; index < displayUrl.length; index += dataParticleSize) {
                     const particles  = displayUrl.slice(index, index + dataParticleSize)
                     dataParticlesCollection.push(particles)
                 }
                 if(!output.val().chatArray || output.val().chatArray == "No message" || typeof(output.val().message) == "string"){
-                    console.log(message);
-                    
                     setChatArray(prev=>[...prev, {[userName]:{
                             prompt: message,
+                            progress: sending,
                             media: displayUrl,
                             mediaType: mediaType
                     }}])
                     const randoms = "abcdefghijklmnA1234567890BCDOELQPMLS"
                     const generateRandom = randoms[Math.floor(Math.random()*randoms.length)]
-                    console.log(generateRandom);
-                    
                     for (let index = 0; index < dataParticlesCollection.length; index++) {
                         set(ref(db, `Media/${randomValue}/${[index]}`),{
                             data : dataParticlesCollection[index]
@@ -244,17 +295,26 @@ const ChatDisplay = (props) => {
                         setMediaOption(()=>false)
                         setDisplayMedia(()=>false)
                         setLoading(()=>false)   
+                        set(ref(db,`Users/${props.chatFriendDetail.UserName}/onlineCheck`),{
+                            user: randomValue
+                        })
+                        setChatArray((prev)=>prev.slice(0, -1))
+                        setChatArray(prev=>[...prev, {[userName]:{
+                            progress: sent,
+                            prompt:message,
+                            media: displayUrl,
+                            mediaType: mediaType
+                        }}])
                     })
                 }
                 else{
-                    console.log(message);
-                    
                     let tempData = output.val().chatArray
                     const blob = new Blob([displayUrl], { type: mediaType });
                     const url = URL.createObjectURL(blob);
                     setChatArray(prev=> [...prev, {[userName]:{
                         prompt:message,
                         media: displayUrl,
+                        progress: sending,
                         mediaType: mediaType
                     }}])
                     for (let index = 0; index < dataParticlesCollection.length; index++) {
@@ -265,10 +325,10 @@ const ChatDisplay = (props) => {
                     // alert("start")
                     tempData.push({[userName]:{
                         prompt:message,
+                        progress: sending,
                         mediaLink: randomValue,
                         mediaType: mediaType
                     }})
-                    console.log(tempData);
                     set(ref(db,"Messages/"+props.chatInfo),{
                         chatArray: tempData
                     })
@@ -277,6 +337,16 @@ const ChatDisplay = (props) => {
                         setMediaOption(()=>false)
                         setDisplayMedia(()=>false)
                         setLoading(()=>false)
+                        set(ref(db,`Users/${props.chatFriendDetail.UserName}/onlineCheck`),{
+                            user: randomValue
+                        })
+                        setChatArray((prev)=>prev.slice(0, -1))
+                        setChatArray(prev=>[...prev, {[userName]:{
+                            progress: sent,
+                            prompt:message,
+                            mediaType: mediaType,
+                            media: displayUrl
+                        }}])
                     })
                 }
             })
@@ -312,7 +382,7 @@ const ChatDisplay = (props) => {
             }
         })
         reader.readAsArrayBuffer(file)
-    }
+     } 
     useEffect(() => {
         const fetchMedia = async() =>{
             const arrayToMap = chatArray
@@ -320,40 +390,35 @@ const ChatDisplay = (props) => {
             for (let index = 0; index < arrayToMap.length; index++) {
                 const output = arrayToMap[index]
                 const user = Object.keys(output)[0]
-                console.log(user, userName);
-                console.log(chatArray);
                 const userData = output[user]
                 if(user != userName && userData?.mediaLink && !userData?.media){
                     get(ref(db, `Media/${userData.mediaLink}`))
                     .then((response)=>{
                         const allChunks = response.val()
                         let collectData = []
-                        console.log(allChunks);
-                        
                         allChunks.map((output, index) => {
                             collectData.push(output.data)
                         })
-                        console.log("ollectData",collectData);
-                        console.log("media",arrayToAdjust[index][user].mediaType);
                         const uint8Chunks = collectData.map(chunk => new Uint8Array(chunk));
                         const blob = new Blob(uint8Chunks, { type: arrayToAdjust[index][user].mediaType });
                         const url = URL.createObjectURL(blob);
-                        arrayToAdjust[index][user].media = blob
-                        setChatArray(arrayToAdjust)
+                        setChatArray(prev=>prev.map((data, i) =>
+                            i == index? {...data,[user]: {...data[user],media: blob}} : data
+                        ))
                         allChunks.map((output, index)=>{
                             set(ref(db, `Media/${userData.mediaLink}/${index}`), null)
                             .then(()=>{
-                                console.log(`Deleted ${userData.mediaLink}/${index}`);
                             })
                         })
                     })
                 }
-                setChatArray(()=>arrayToAdjust)
             }
-            setChatArray(()=>arrayToAdjust)
             
         }
         fetchMedia()
+    }, [chatArray])
+    useEffect(() => {
+        console.log(chatArray);
     }, [chatArray])
     const MemorizedMediaType = React.memo(MediaTypesSelect)
     return (
@@ -380,16 +445,13 @@ const ChatDisplay = (props) => {
                         <div className="chat-log">
                             {
                                 chatArray.map((output,index)=>{
-                                    console.log("outputMap:", output);
-                                    
                                     if(output){
                                         if (Object.keys(output)[0] == userName) {
                                             return(
                                                 <div className='request chat-request' key={index}>
                                                     <main>
                                                         <MediaTypesSelect type={output[`${userName}`].mediaType} data={output[`${userName}`].media} setPreviewMedia={setPreviewMedia} previewSrc={previewSrc} previewType = {previewType} statusPreview={statusPreview}/>
-                                                        <p>{output[`${userName}`].prompt}</p>
-                                                        <img src={output[`${userName}`].progress} alt="" />
+                                                        <p>{output[`${userName}`].prompt}<img src={output[`${userName}`].progress} alt="" className='progress'/></p>
                                                     </main>
                                                 </div>
                                             )
@@ -400,7 +462,6 @@ const ChatDisplay = (props) => {
                                                     <main>
                                                     <MediaTypesSelect type={output[`${Object.keys(output)[0]}`].mediaType} data={output[`${Object.keys(output)[0]}`].media} setPreviewMedia={setPreviewMedia} previewSrc={previewSrc} previewType = {previewType} statusPreview={statusPreview}/>
                                                     <p>{output[`${Object.keys(output)[0]}`].prompt}</p>
-                                                    <img src={output[`${Object.keys(output)[0]}`].progress} alt="" />
                                                     </main>
                                                 </div>
                                             )
@@ -458,5 +519,6 @@ const ChatDisplay = (props) => {
         </>
     )
 }
+
 
 export default ChatDisplay
